@@ -1,14 +1,22 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import type { Request, Response } from 'express';
 
 dotenv.config();
+
+const token = process.env.HF_API_TOKEN;
+if (!token) {
+  throw new Error('Hugging Face token is missing.');
+}
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+}));
 app.use(express.json());
 
 interface EmailRequest {
@@ -32,7 +40,7 @@ app.post('/generate-email', async (req: Request<{}, {}, EmailRequest>, res: Resp
     const response = await axios.post(
       'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
       {
-        inputs: `Generate a professional email about: ${prompt}. 
+        inputs: `Generate an email about: ${prompt}. 
         Include subject line and body. Format:
         Subject: <subject>
         Body: <email body>`,
@@ -44,6 +52,7 @@ app.post('/generate-email', async (req: Request<{}, {}, EmailRequest>, res: Resp
       {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       }
     );
