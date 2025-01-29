@@ -24,9 +24,32 @@ interface EmailRequest {
 }
 
 interface EmailResponse {
-  email?: string;
+  subject?: string;
+  body?: string;
   error?: string;
 }
+
+// Function to extract the subject and body dynamically
+const parseGeneratedEmail = (generatedText: string): EmailResponse => {
+  // Remove placeholder values if they exist
+  generatedText = generatedText.replace(/Format the response as follows:\s*Subject:\s*<subject>\s*Body:\s*<email body>/gi, "").trim();
+
+  // Look for "Subject:" and "Body:" in the text
+  const subjectMatch = generatedText.match(/Subject:\s*(.+)/i);
+  const bodyMatch = generatedText.match(/Body:\s*([\s\S]*)/i);
+
+  if (subjectMatch && bodyMatch) {
+    let subject = subjectMatch[1].trim();
+    let body = bodyMatch[1].trim();
+
+    // Ensure we don't have any extra "Subject:" inside the body
+    body = body.replace(/^\s*Subject:.*$/gm, "").trim();
+
+    return { subject, body };
+  }
+
+  return { error: 'Failed to extract email content' };
+};
 
 // Root route for testing
 app.get('/', (req: Request, res: Response) => {
@@ -56,8 +79,9 @@ app.post('/generate-email', async (req: Request<{}, {}, EmailRequest>, res: Resp
         },
       }
     );
-
-    res.json({ email: response.data[0].generated_text });
+    console.log(response.data[0].generated_text);
+    const parsedEmail = parseGeneratedEmail(response.data[0].generated_text);
+    res.json(parsedEmail);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error generating email' });

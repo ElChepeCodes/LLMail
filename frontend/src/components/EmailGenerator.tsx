@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { FiMail, FiEdit, FiCopy, FiTrash2, FiAlertCircle } from 'react-icons/fi';
+import { FiMail, FiEdit, FiTrash2, FiAlertCircle } from 'react-icons/fi';
 
 const EmailGenerator = () => {
   const [prompt, setPrompt] = useState<string>('');
@@ -66,20 +66,6 @@ const EmailGenerator = () => {
     }
   }, [isShaking]);
 
-  // Function to extract subject and body from the generated email text
-  const parseEmailContent = (generatedText: string) => {
-    const subjectMatch = generatedText.match(/Subject:\s*(.*)/);
-    const bodyMatch = generatedText.match(/Body:\s*(.*)/s); // The `s` flag allows dot (.) to match newlines
-    
-    if (subjectMatch && bodyMatch) {
-      const subject = subjectMatch[1].trim();
-      const body = bodyMatch[1].trim();
-      return { subject, body };
-    }
-
-    return { subject: '', body: '' };
-  };
-
   const generateEmail = async () => {
     if (!prompt.trim()) {
       setError('Please enter a description for your email');
@@ -90,7 +76,7 @@ const EmailGenerator = () => {
     setError('');
     try {
       const response = await axios.post('http://localhost:3001/generate-email', { prompt });
-      const { subject, body } = parseEmailContent(response.data.email || '');
+      const { subject, body } = response.data;
       setEmail({ subject, body });
     } catch {
       setError('Failed to generate email. Please try again.');
@@ -100,7 +86,6 @@ const EmailGenerator = () => {
   };
 
   const copyToClipboard = () => {
-    console.log(email.subject);
     navigator.clipboard.writeText(`${email.subject}\n\n${email.body}`);
   };
 
@@ -111,17 +96,17 @@ const EmailGenerator = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 min-h-screen flex flex-col overflow-auto">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <FiMail className="mx-auto h-12 w-12 text-blue-600 mb-4" />
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          AI Email Generator
-        </h1>
-        <p className="text-gray-600">
-          Transform your ideas into professional emails instantly
-        </p>
-      </div>
+    <div className="max-w-3xl mx-auto p-6 min-h-screen flex flex-col overflow-auto bg-surface">
+    {/* Header */}
+    <div className="text-center mb-12">
+      <FiMail className="mx-auto h-12 w-12 text-primary-500 mb-4" />
+      <h1 className="text-4xl font-bold text-onSurface mb-2">
+        AI Email Generator
+      </h1>
+      <p className="text-onSurface/80">
+        Transform your ideas into professional emails instantly
+      </p>
+    </div>
 
       {/* Main Content */}
       <div className="bg-white rounded-lg shadow-xl p-8 space-y-8 flex-1 overflow-hidden">
@@ -144,11 +129,11 @@ const EmailGenerator = () => {
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder=" "
-              className={`w-full px-4 py-3 border ${
-                error ? 'border-red-300' : 'border-gray-300'
-              } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 
+              className={`w-full px-20 py-3 border ${
+                error ? 'border-secondary-500' : 'border-onSurface/20'
+              } rounded-lg shadow-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500 
               transition-all resize-none min-h-[20px] overflow-hidden focus:outline-none 
-              placeholder:text-transparent bg-gray-50 peer`}
+              placeholder:text-transparent bg-surface text-onSurface`}
               style={{
                 height: prompt.split('\n').length > 2 ? 'auto' : '100px', // Adjust height based on lines
                 maxHeight: '200px', // Maximum expansion height
@@ -222,22 +207,33 @@ const EmailGenerator = () => {
         {/* Output Section */}
         {email.subject && email.body && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Generated Email</h3>
+            {/* Display Subject */}
+            {email.subject && (
+              <div className="text-xl font-semibold text-gray-800">
+                Subject: <span className="text-blue-600">{email.subject}</span>
+              </div>
+            )}
+
+            {/* Display Body */}
+            {email.body && (
+              <div className="bg-gray-50 p-6 rounded-lg whitespace-pre-wrap font-mono text-gray-800 
+              border border-gray-200 transition-all hover:border-blue-600 custom-scrollbar">
+                {email.body}
+              </div>
+            )}
+
+            {/* Copy Button */}
+            <div className="flex justify-end">
               <button
                 onClick={copyToClipboard}
-                className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 focus:outline-none"
               >
-                <FiCopy className="mr-2" />
-                Copy
+                Copy Email
               </button>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-lg whitespace-pre-wrap font-mono text-gray-700 border border-gray-200 transition-all hover:border-blue-600 custom-scrollbar">
-              <div className="font-semibold">{email.subject}</div>
-              <div className="mt-2">{email.body}</div>
             </div>
           </div>
         )}
+
       </div>
 
       {/* Footer */}
