@@ -41,7 +41,7 @@ app.post('/generate-email', async (req: Request<{}, {}, EmailRequest>, res: Resp
       'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
       {
         inputs: `Generate an email about: ${prompt}. 
-        Include subject line and body. Format:
+        Format the response as follows:
         Subject: <subject>
         Body: <email body>`,
         parameters: {
